@@ -41,6 +41,11 @@ export default function Home() {
     textAreaRef.current?.focus();
   }, []);
 
+  // feat: Adjust the approach of auto-scrolling to bottom
+  useEffect(() => {
+    messageListRef.current?.scrollTo(0, messageListRef.current.scrollHeight);
+  }, [messages]);
+
   //handle form submission
   async function handleSubmit(e: any) {
     e.preventDefault();
@@ -102,8 +107,6 @@ export default function Home() {
 
       setLoading(false);
 
-      //scroll to bottom
-      messageListRef.current?.scrollTo(0, messageListRef.current.scrollHeight);
     } catch (error) {
       setLoading(false);
       setError('An error occurred while fetching the data. Please try again.');
