@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { OpenAIEmbeddings } from 'langchain/embeddings/openai';
 import { PineconeStore } from 'langchain/vectorstores/pinecone';
 import { makeChain } from '@/utils/makechain';
+import { BaseChatMessage, HumanChatMessage, AIChatMessage } from 'langchain/schema';
 import { pinecone } from '@/utils/pinecone-client';
 import { PINECONE_INDEX_NAME, PINECONE_NAME_SPACE } from '@/config/pinecone';
 
@@ -11,7 +12,19 @@ export default async function handler(
 ) {
   const { question, history } = req.body;
 
-  console.log('question', question);
+  console.log('question: ', question);
+  console.log('history: ', history);
+
+  let histories: BaseChatMessage[] = [];
+  history.forEach((hist: { type: string; data: { content: string; }; }) => {
+    if(hist.type === 'human')  {
+      let req: BaseChatMessage = new HumanChatMessage(hist.data.content);
+      histories.push(req);
+    } else if (hist.type === 'ai') {
+      let respond: BaseChatMessage = new AIChatMessage(hist.data.content);
+      histories.push(respond);
+    }
+  });
 
   //only accept post requests
   if (req.method !== 'POST') {
@@ -43,13 +56,13 @@ export default async function handler(
     //Ask a question using chat history
     const response = await chain.call({
       question: sanitizedQuestion,
-      chat_history: history || [],
+      chat_history: histories || [],
     });
 
-    console.log('response', response);
+    console.log('response: ', response);
     res.status(200).json(response);
   } catch (error: any) {
-    console.log('error', error);
+    console.log('error: ', error);
     res.status(500).json({ error: error.message || 'Something went wrong' });
   }
 }
