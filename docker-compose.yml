@@ -1,6 +1,8 @@
 version: '3.9'
 services:
   app:
+    image: gpt35-pdf-chatbot-langchain:v1.0
+    container_name: gpt-pdf-chatbot
     build:
       context: ./
       target: runner
@@ -10,5 +12,5 @@ services:
     ports:
       - "3000:3000"
     environment:
-      NODE_ENV: development
-      NODE_OPTIONS: --dns-result-order=ipv4first
+      - NODE_ENV=development
+      - NODE_OPTIONS=--dns-result-order=ipv4first
