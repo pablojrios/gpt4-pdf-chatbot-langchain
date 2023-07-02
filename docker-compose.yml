@@ -1,16 +1,18 @@
-version: '3.9'
+# https://github.com/vercel/next.js/blob/canary/examples/with-docker-compose/docker-compose.dev.yml
+version: '3'
 services:
   app:
     image: gpt35-pdf-chatbot:v1.0
     container_name: gpt35-pdf-chatbot-app
     build:
       context: ./
-      target: runner
+      dockerfile: Dockerfile
+      target: runner 
     volumes:
       - .:/app
-    command: npm run dev
+        #command: npm run dev
+    command: npm start
     ports:
       - "3000:3000"
     environment:
-      - NODE_ENV=development
       - NODE_OPTIONS=--dns-result-order=ipv4first
