@@ -10,15 +10,12 @@ FROM base AS builder
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
+
 # Install dependencies 
-COPY package.json yarn.lock* ./
+COPY package.json yarn.lock ./
 # RUN  npm install --production
 # Omit --production flag for TypeScript devDependencies
-RUN \
-  if [ -f yarn.lock ]; then yarn --frozen-lockfile; \
-  # Allow install without lockfile, so example works even without Node.js installed locally
-  else echo "Warning: Lockfile not found. It is recommended to commit lockfiles to version control." && yarn install; \
-  fi
+RUN yarn install --frozen-lockfile
 
 WORKDIR /app
 # Copy app files
@@ -46,27 +43,55 @@ ENV NEXT_TELEMETRY_DISABLED 1
 # RUN npm run build (es equivalente a yarn build)
 # yarn build se usa para armar un binario para producción, pero como voy a arrancar el server en modo dev con yarn dev
 # yarn build no hace falta.
-# RUN yarn build
-RUN npm run build
+RUN yarn build
+# RUN npm run build
 
 # Note: It is not necessary to add an intermediate step that does a full copy of `node_modules` here
 
 # Step 2. Production image, copy all the files and run next
-FROM base AS runner
+FROM base as runner
 WORKDIR /app
 
 ENV NEXT_TELEMETRY_DISABLED 1
 
 # TODO: Don't run production as root
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+# RUN addgroup --system --gid 1001 nodejs
+# RUN adduser --system --uid 1001 nextjs
+# RUN adduser nextjs nodejs
 
-# USER nextjs:nodejs
+# RUN chown nextjs:nodejs /app
+
+# previamente ejecuté:
+# rm -fr .next
+# yarn build
+# yarn start
+# Así cuando vas a http://localhost:3000 no compila ningún archivo ya que no corrí npm run dev
+#
+# pablo@visionaria:~/dev/gpt4-pdf-chatbot-langchain(main)$ ls -l .next
+# total 832
+# -rw-rw-r-- 1 pablo pablo     21 jul  4 22:17 BUILD_ID
+# -rw-rw-r-- 1 pablo pablo   1125 jul  4 22:17 build-manifest.json
+# drwxrwxr-x 6 pablo pablo   4096 jul  4 22:18 cache
+# -rw-rw-r-- 1 pablo pablo     93 jul  4 22:17 export-marker.json
+# -rw-rw-r-- 1 pablo pablo    511 jul  4 22:17 images-manifest.json
+# -rw-rw-r-- 1 pablo pablo 101681 jul  4 22:17 next-server.js.nft.json
+# -rw-rw-r-- 1 pablo pablo     20 jul  4 22:16 package.json
+# -rw-rw-r-- 1 pablo pablo    362 jul  4 22:17 prerender-manifest.js
+# -rw-rw-r-- 1 pablo pablo    312 jul  4 22:17 prerender-manifest.json
+# -rw-rw-r-- 1 pablo pablo      2 jul  4 22:17 react-loadable-manifest.json
+# -rw-rw-r-- 1 pablo pablo   2953 jul  4 22:17 required-server-files.json
+# -rw-rw-r-- 1 pablo pablo    484 jul  4 22:16 routes-manifest.json
+# drwxrwxr-x 4 pablo pablo   4096 jul  4 22:17 server
+# drwxrwxr-x 6 pablo pablo   4096 jul  4 22:17 static
+# -rw-rw-r-- 1 pablo pablo 693546 jul  4 22:17 trace
+
 
 # Automatically leverage output traces to reduce image size
 # https://nextjs.org/docs/advanced-features/output-file-tracing
 # COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
 COPY --from=builder /app/.next ./.next
+
+# USER nextjs
 
 # Note: Don't expose ports here, Compose will handle that for us
 # EXPOSE 3000

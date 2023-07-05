@@ -1,5 +1,5 @@
 # https://github.com/vercel/next.js/blob/canary/examples/with-docker-compose/docker-compose.dev.yml
-version: '3'
+version: '3.8'
 services:
   app:
     image: gpt35-pdf-chatbot:v1.0
@@ -10,8 +10,7 @@ services:
       target: runner 
     volumes:
       - .:/app
-        #command: npm run dev
-    command: npm start
+    command: npm run dev
     ports:
       - "3000:3000"
     environment:
